@@ -4,7 +4,7 @@ import networkx as nx
 
 class NetworkCoOccurrence:
 
-    def get_network(self, C, min_subjects=0, min_occurences=1, net_type=None):
+    def get_network(self, L, C, min_subjects=0, min_occurences=1, net_type=None):
         C = C.copy()
         C, CC = self.get_cooccurrence(C, min_subjects, min_occurences)
         N = C.shape[0]
@@ -23,7 +23,7 @@ class NetworkCoOccurrence:
                 RR_dist = RR_dist[RR_dist < 1]
 
         P = np.diag(CC)
-        G_rr = self.create_graph(RR_graph, P)
+        G_rr = self.create_graph(RR_graph, P, L)
 
         Phi, t = self.get_phi(CC, N)
         Phi_graph, Phi_dist = self.get_graph_phi(Phi, t)
@@ -37,7 +37,7 @@ class NetworkCoOccurrence:
                 Phi_graph = Phi_graph * -1
                 Phi_dist = Phi_dist[Phi_dist < 0]
 
-        G_phi = self.create_graph(Phi_graph, P)
+        G_phi = self.create_graph(Phi_graph, P, L)
 
         return C, CC, RR_graph, RR_dist, G_rr, Phi_graph, Phi_dist, G_phi
 
@@ -133,12 +133,13 @@ class NetworkCoOccurrence:
         Phi_dist = Phi_dist2.ravel()
         return Phi_graph, Phi_dist
 
-    def put_attributes(self, G, P, metric):
+    def put_attributes(self, G, P, L, metric):
         for i in G.nodes:
             G.nodes[i]['prevalence'] = int(P[i])
             G.nodes[i]['sum_metric'] = float(np.sum(metric[i, :]))
+            G.nodes[i]['label'] = L[i]
 
-    def create_graph(self, matrix, P):
+    def create_graph(self, matrix, P, L):
         G = nx.from_numpy_matrix(matrix)
-        self.put_attributes(G, P, matrix)
+        self.put_attributes(G, P, L, matrix)
         return G
